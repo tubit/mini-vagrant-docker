@@ -1,0 +1,29 @@
+---
+- hosts: all
+  tasks:
+    - name: is host reachable?
+      action: ping
+
+    - name: get docker.io apt-key
+      action: command apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 36A1D7869245C8950F966E92D8576A8BA88D21E9
+
+    - name: install docker repo
+      apt_repository: repo='deb https://get.docker.io/ubuntu docker main' state=present 
+
+    - name: install docker from docker.io
+      apt: name=lxc-docker=0.11.1 update_cache=yes state=present
+
+    - name: docker should listen on port 4243
+      lineinfile: dest=/etc/default/docker regexp='^DOCKER_OPTS.*$' line='DOCKER_OPTS="-H tcp://0.0.0.0:4243"'
+      notify:
+          - Restart docker
+
+    - name: set DOCKER_HOST to localhost in /etc/environment
+      lineinfile: dest=/etc/environment regexp='^DOCKER_HOST.*$' line='DOCKER_HOST="tcp://0.0.0.0:4243"'
+
+  handlers:
+    - name: Restart docker
+      action: service name=docker state=restarted
+
+
+
