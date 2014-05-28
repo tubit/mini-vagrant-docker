@@ -11,10 +11,14 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   # forward default docker port
   config.vm.network "forwarded_port", guest: 4243, host: 4243
 
-  # ansible as provisioner
-  config.vm.provision "ansible" do |ansible|
-    ansible.sudo = true
-    ansible.playbook = "provisioning/playbook.yml"
+  # For masterless, mount your salt file root
+  config.vm.synced_folder "salt/roots/", "/srv/salt/"
+
+  # Use all the defaults:
+  config.vm.provision :salt do |salt|
+    salt.minion_config = "salt/minion"
+    salt.run_highstate = true
   end
+
 end
 
